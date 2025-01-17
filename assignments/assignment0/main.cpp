@@ -8,6 +8,10 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#include <ew/shader.h>
+#include <ew/model.h>
+#include <ew/camera.h>
+
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 GLFWwindow* initWindow(const char* title, int width, int height);
 void drawUI();
@@ -22,6 +26,24 @@ int main() {
 	GLFWwindow* window = initWindow("Assignment 0", screenWidth, screenHeight);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
+	glEnable(GL_CULL_FACE);
+	// back face culling
+	glCullFace(GL_BACK);
+	// depth testing
+	glEnable(GL_DEPTH_TEST);
+
+	ew::Shader shader = ew::Shader("assets/lit.vert", "assets/lit.frag");
+
+	ew::Model monkeyModel = ew::Model("assets/suzanne.obj");
+
+	ew::Camera camera;
+	camera.position = glm::vec3(0.0f, 0.0f, 5.0f);
+	// look at the center of the screen
+	camera.target = glm::vec3(0.0f, 0.0f, 0.0f);
+	camera.aspectRatio = (float)screenWidth / screenHeight;
+	// vertical field of view in degrees
+	camera.fov = 60.0f;
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
@@ -32,6 +54,13 @@ int main() {
 		//RENDER
 		glClearColor(0.6f,0.8f,0.92f,1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		shader.use();
+		shader.setMat4("_Model", glm::mat4(1.0f));
+		shader.setMat4("_ViewProjection", camera.projectionMatrix() * camera.viewMatrix());
+
+		// draws monkey model using current shader
+		monkeyModel.draw();
 
 		drawUI();
 
