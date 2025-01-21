@@ -26,7 +26,6 @@ int screenHeight = 720;
 float prevFrameTime;
 float deltaTime;
 
-//TODO: FIX CAMERA
 ew::Camera camera;
 ew::CameraController cameraController;
 
@@ -49,20 +48,24 @@ int main() {
 	// vertical field of view in degrees
 	camera.fov = 60.0f;
 
+	glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
+
 	glEnable(GL_CULL_FACE);
 	// back face culling
 	glCullFace(GL_BACK);
 	// depth testing
 	glEnable(GL_DEPTH_TEST);
 
-	GLuint brickTexture = ew::loadTexture("assets/brick_color.jpg");
+	GLuint brickTexture = ew::loadTexture("assets/PavingStones.png");
+	GLuint normalMap = ew::loadTexture("assets/PavingStones_normal.png");
 
 	// bind brick texture to texture unit 0
 	glBindTextureUnit(0, brickTexture);
+	glBindTextureUnit(1, normalMap);
 
 	ew::Shader shader = ew::Shader("assets/lit.vert", "assets/lit.frag");
 
-	ew::Model monkeyModel = ew::Model("assets/suzanne.obj");
+	ew::Model monkeyModel = ew::Model("assets/suzanne.fbx");
 
 	ew::Transform monkeyTransform;
 
@@ -84,7 +87,10 @@ int main() {
 		shader.setInt("_MainTex", 0);
 		shader.setMat4("_Model", glm::mat4(1.0f));
 		shader.setMat4("_ViewProjection", camera.projectionMatrix() * camera.viewMatrix());
-		shader.setVec3("_EyePos", camera.position);
+		//shader.setVec3("_EyePos", camera.position);
+		shader.setInt("normalMap", 1);
+		shader.setVec3("viewPos", camera.position);
+		shader.setVec3("lightPos", lightPos);
 
 		shader.setFloat("_Material.Ka", material.Ka);
 		shader.setFloat("_Material.Kd", material.Kd);
