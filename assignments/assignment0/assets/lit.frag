@@ -7,9 +7,9 @@ out vec4 FragColor;
 in Surface
 {
 	// vertex position in world space
-	vec3 WorldPos;
+	//vec3 WorldPos;
 	// vertex normal in world space
-	vec3 WorldNormal;
+	//vec3 WorldNormal;
 	vec2 TexCoord;
 	vec3 TangentLightPos;
 	vec3 TangentViewPos;
@@ -21,10 +21,10 @@ uniform sampler2D normalMap;
 // 2D texture sampler
 uniform sampler2D _MainTex;
 
-uniform vec3 _EyePos = fs_in.TangentViewPos;
+//uniform vec3 _EyePos;
 
 // light pointing straight down
-uniform vec3 _LightDirection = fs_in.TangentLightPos;
+//uniform vec3 _LightDirection = vec3(0.0, -1.0, 0.0);
 
 // white light
 uniform vec3 _LightColor = vec3(1.0);
@@ -57,15 +57,15 @@ void main()
 	vec3 rgb_normal = normal * 0.5 + 0.5;
 
 	// light pointing straight down
-	vec3 toLight = -_LightDirection;
+	vec3 toLight = -fs_in.TangentLightPos;//_LightDirection;
 	float diffuseFactor = max(dot(rgb_normal, toLight), 0.0);
 
 	// direction toward eye
-	vec3 toEye = normalize(_EyePos - fs_in.WorldPos);
+	vec3 toEye = normalize(/*_EyePos*/fs_in.TangentViewPos - fs_in.TangentFragPos);
 
 	// blinn-phong uses half angle
 	vec3 h = normalize(toLight + toEye);
-	float specularFactor = pow(max(dot(rgb_normal, h), 0.0), _Material.Shininess);
+	float specularFactor = pow(max(dot(normal, h), 0.0), _Material.Shininess);
 
 	// combination of specular and diffuse reflection
 	vec3 lightColor = (_Material.Kd * diffuseFactor + _Material.Ks * specularFactor) * _LightColor;
