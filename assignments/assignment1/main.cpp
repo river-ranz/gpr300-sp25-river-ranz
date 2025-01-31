@@ -8,6 +8,13 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#include <ew/shader.h>
+#include <ew/model.h>
+#include <ew/camera.h>
+#include <ew/transform.h>
+#include <ew/cameraController.h>
+#include <ew/texture.h>
+
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 GLFWwindow* initWindow(const char* title, int width, int height);
 void drawUI();
@@ -22,24 +29,30 @@ int main() {
 	GLFWwindow* window = initWindow("Assignment 1", screenWidth, screenHeight);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
+	unsigned int fbo;
+	glGenFramebuffers(1, &fbo);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+	{
+		// yippee
+	}
+
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	//glDeleteFramebuffers(1, &fbo);
+
 	glEnable(GL_CULL_FACE);
 	// back face culling
 	glCullFace(GL_BACK);
 	// depth testing
 	glEnable(GL_DEPTH_TEST);
 
-	// create framebuffer
-	unsigned int fbo;
-	glGenFramebuffers(1, &fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	GLuint texture = ew::loadTexture("assets/PavingStones.png");
+	glBindTextureUnit(0, texture);
 
-
-
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER == GL_FRAMEBUFFER_COMPLETE))
-		// yippee
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDeleteFramebuffers(1, &fbo);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -49,7 +62,7 @@ int main() {
 		prevFrameTime = time;
 
 		//RENDER
-		glClearColor(0.6f,0.8f,0.92f,1.0f);
+		glClearColor(0.6f, 0.8f, 0.92f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		drawUI();
@@ -112,4 +125,3 @@ GLFWwindow* initWindow(const char* title, int width, int height) {
 
 	return window;
 }
-
