@@ -26,53 +26,16 @@ int screenHeight = 720;
 float prevFrameTime;
 float deltaTime;
 
+struct Material
+{
+	float Ka = 1.0;
+	float Kd = 0.5;
+	float Ks = 0.5;
+	float Shininess = 128;
+}material;
+
 ew::Camera camera;
 ew::CameraController cameraController;
-
-//float cubeVertices[] = {
-//	// positions          // texture Coords
-//	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-//	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-//	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-//	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-//
-//	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-//	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-//	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-//	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-//	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//
-//	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//
-//	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//
-//	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-//	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-//	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-//	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//
-//	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-//	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-//	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-//};
 
 float quadVertices[] =
 {
@@ -98,18 +61,6 @@ int main() {
 
 	glm::vec3 lightPos(0.0, -1.0, 0.0);
 
-	//// VAOs/VBOs from OpenGL tutorial
-	//unsigned int cubeVAO, cubeVBO;
-	//glGenVertexArrays(1, &cubeVAO);
-	//glGenBuffers(1, &cubeVBO);
-	//glBindVertexArray(cubeVAO);
-	//glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	//glEnableVertexAttribArray(1);
-	//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-
 	unsigned int quadVAO, quadVBO;
 	glGenVertexArrays(1, &quadVAO);
 	glGenBuffers(1, &quadVBO);
@@ -132,8 +83,7 @@ int main() {
 	GLuint normalMap = ew::loadTexture("assets/PavingStones_normal.png");
 
 	shader.use();
-	shader.setInt("_MainTex", texture);
-	shader.setInt("normalMap", normalMap);
+	
 
 	screenShader.use();
 	screenShader.setInt("screenTexture", 0);
@@ -153,11 +103,6 @@ int main() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-	{
-
-	}
-
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glEnable(GL_CULL_FACE);
@@ -174,39 +119,34 @@ int main() {
 		prevFrameTime = time;
 
 		//RENDER
-		glClearColor(0.6f, 0.8f, 0.92f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		cameraController.move(window, &camera, deltaTime);
 
 		// first pass
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0.6f, 0.8f, 0.92f, 1.0f); // background color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 
+		glBindTextureUnit(0, texture);
+		glBindTextureUnit(1, normalMap);
+
 		shader.use();
-		glm::mat4 model = glm::mat4(1.0f);
+		shader.setInt("_MainTex", 0);
+		shader.setInt("normalMap", 1);
 		shader.setMat4("_ViewProjection", camera.projectionMatrix() * camera.viewMatrix());
 		shader.setVec3("viewPos", camera.position);
 		shader.setVec3("lightPos", lightPos);
+		shader.setFloat("_Material.Ka", material.Ka);
+		shader.setFloat("_Material.Kd", material.Kd);
+		shader.setFloat("_Material.Ks", material.Ks);
+		shader.setFloat("_Material.Shininess", material.Shininess);
 
 		monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
 
 		shader.setMat4("_Model", monkeyTransform.modelMatrix());
 
 		monkeyModel.draw();
-
-		/*glBindVertexArray(cubeVAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-		shader.setMat4("_Model", model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-		shader.setMat4("_Model", model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);*/
 
 		// second pass
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -239,6 +179,13 @@ void drawUI() {
 	ImGui::NewFrame();
 
 	ImGui::Begin("Settings");
+	if (ImGui::CollapsingHeader("Material"))
+	{
+		ImGui::SliderFloat("AmbientK", &material.Ka, 0.0f, 1.0f);
+		ImGui::SliderFloat("DiffuseK", &material.Kd, 0.0f, 1.0f);
+		ImGui::SliderFloat("SpecularK", &material.Ks, 0.0f, 1.0f);
+		ImGui::SliderFloat("Shininess", &material.Shininess, 2.0f, 1024.0f);
+	}
 	if (ImGui::Button("Reset Camera"))
 	{
 		resetCamera(&camera, &cameraController);
