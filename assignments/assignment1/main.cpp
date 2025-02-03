@@ -34,6 +34,11 @@ struct Material
 	float Shininess = 128;
 }material;
 
+glm::vec3 colorAvg = glm::vec3(0.2126f, 0.7152f, 0.0722f);
+
+bool grayscale = false;
+bool blur = false;
+
 ew::Camera camera;
 ew::CameraController cameraController;
 
@@ -103,6 +108,13 @@ int main() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
 
+	// depth & stencil
+	unsigned int rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glEnable(GL_CULL_FACE);
@@ -155,6 +167,11 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		screenShader.use();
+		if (grayscale == false) { screenShader.setInt("grayscale", 0); }
+		else { screenShader.setInt("grayscale", 1); }
+		screenShader.setVec3("colorAvg", colorAvg);
+		if (blur == false) { screenShader.setInt("blur", 0); }
+		else { screenShader.setInt("blur", 1); }
 		glBindVertexArray(quadVAO);
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -185,6 +202,14 @@ void drawUI() {
 		ImGui::SliderFloat("DiffuseK", &material.Kd, 0.0f, 1.0f);
 		ImGui::SliderFloat("SpecularK", &material.Ks, 0.0f, 1.0f);
 		ImGui::SliderFloat("Shininess", &material.Shininess, 2.0f, 1024.0f);
+	}
+	ImGui::Checkbox("Blur", &blur);
+	ImGui::Checkbox("Grayscale", &grayscale);
+	if (ImGui::CollapsingHeader("Grayscale"))
+	{
+		ImGui::SliderFloat("Red", &colorAvg.r, 0.1f, 1.0f);
+		ImGui::SliderFloat("Green", &colorAvg.g, 0.1f, 1.0f);
+		ImGui::SliderFloat("Blue", &colorAvg.b, 0.1f, 1.0f);
 	}
 	if (ImGui::Button("Reset Camera"))
 	{
