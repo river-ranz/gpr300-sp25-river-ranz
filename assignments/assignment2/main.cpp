@@ -55,13 +55,13 @@ float quadVertices[] =
 
 float planeVertices[] =
 {
-	 25.0f, -0.5f,  25.0f, 0.0f, 1.0f, 0.0f, 25.0f,  0.0f
-	-25.0f, -0.5f,  25.0f, 0.0f, 1.0f, 0.0f,  0.0f,  0.0f,
-	-25.0f, -0.5f, -25.0f, 0.0f, 1.0f, 0.0f,  0.0f, 25.0f,
-
-	 25.0f, -0.5f,  25.0f, 0.0f, 1.0f, 0.0f, 25.0f,  0.0f,
-	-25.0f, -0.5f, -25.0f, 0.0f, 1.0f, 0.0f,  0.0f, 25.0f,
-	 25.0f, -0.5f, -25.0f, 0.0f, 1.0f, 0.0f, 25.0f, 25.0f
+	 5.0f, -2.5f,  5.0f, 0.0f, 1.0f, 0.0f,  5.0f,  0.0f,
+	-5.0f, -2.5f, -5.0f, 0.0f, 1.0f, 0.0f,  0.0f,  5.0f,
+	-5.0f, -2.5f,  5.0f, 0.0f, 1.0f, 0.0f,  0.0f,  0.0f,
+	
+	 5.0f, -2.5f,  5.0f, 0.0f, 1.0f, 0.0f,  5.0f,  0.0f,
+	 5.0f, -2.5f, -5.0f, 0.0f, 1.0f, 0.0f,  5.0f,  5.0f,
+	-5.0f, -2.5f, -5.0f, 0.0f, 1.0f, 0.0f,  0.0f,  5.0f
 };
 
 int main() {
@@ -93,7 +93,7 @@ int main() {
 	glGenBuffers(1, &planeVBO);
 	glBindVertexArray(planeVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
@@ -121,12 +121,6 @@ int main() {
 
 	GLuint texture = ew::loadTexture("assets/PavingStones.png");
 	GLuint normalMap = ew::loadTexture("assets/PavingStones_normal.png");
-
-	shader.use();
-	
-
-	screenShader.use();
-	screenShader.setInt("screenTexture", 0);
 
 	unsigned int framebuffer;
 	glGenFramebuffers(1, &framebuffer);
@@ -175,6 +169,13 @@ int main() {
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	shader.use();
+	shader.setInt("diffuseTexture", 0);
+	shader.setInt("shadowMap", 1);
+
+	screenShader.use();
+	screenShader.setInt("screenTexture", 0);
 
 	glEnable(GL_CULL_FACE);
 	// back face culling
@@ -231,9 +232,9 @@ int main() {
 
 		monkeyModel.draw();
 
+		shader.setMat4("_Model", glm::mat4(1.0f));
 		glBindVertexArray(planeVAO);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glDrawArrays(GL_TRIANGLES, 0, 4);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		// second pass
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -298,7 +299,7 @@ void drawUI() {
 	// stretch image
 	ImVec2 windowSize = ImGui::GetWindowSize();
 	// invert 0-1 V to flip vertically
-	ImGui::Image((ImTextureID)3, windowSize, ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image((ImTextureID)0, windowSize, ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::EndChild();
 	ImGui::End();
 
