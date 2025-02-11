@@ -138,7 +138,7 @@ int main() {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
 
 	// depth & stencil
-	unsigned int rbo;
+	GLuint rbo;
 	glGenRenderbuffers(1, &rbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
@@ -147,13 +147,13 @@ int main() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// depth map
-	unsigned int depthMapFBO;
+	GLuint depthMapFBO;
 	glGenFramebuffers(1, &depthMapFBO);
 
 	// 2D texture (using depth buffer)
-	const unsigned int SHADOW_WIDTH = 1080, SHADOW_HEIGHT = 720;
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
-	unsigned int depthMap;
+	GLuint depthMap;
 	glGenTextures(1, &depthMap);
 	glBindTexture(GL_TEXTURE_2D, depthMap);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -171,7 +171,7 @@ int main() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	shader.use();
-	shader.setInt("diffuseTexture", 0);
+	shader.setInt("_MainTex", 0);
 	shader.setInt("shadowMap", 1);
 
 	screenShader.use();
@@ -182,6 +182,8 @@ int main() {
 	glCullFace(GL_BACK);
 	// depth testing
 	glEnable(GL_DEPTH_TEST);
+
+	glBindTextureUnit(0, depthMap);
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -202,21 +204,27 @@ int main() {
 		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 		glClear(GL_DEPTH_BUFFER_BIT);
+
+		depthShader.use();
+		//depthShader.setMat4("model", glm::mat4(1.0f));
+		//glBindVertexArray(planeVAO);
+		//glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
+
+		depthShader.setMat4("model", monkeyTransform.modelMatrix());
+
+		monkeyModel.draw();
+
+
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
 		// render with shadow mapping
 		glViewport(0, 0, screenWidth, screenHeight);
 		glClearColor(0.6f, 0.8f, 0.92f, 1.0f); // background color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		glEnable(GL_DEPTH_TEST);
-
-		glBindTextureUnit(0, texture);
-		glBindTextureUnit(1, normalMap);
-		glBindTextureUnit(2, depthMap);
 
 		shader.use();
-		shader.setInt("_MainTex", 0);
 		shader.setInt("normalMap", 1);
 		shader.setMat4("_ViewProjection", camera.projectionMatrix() * camera.viewMatrix());
 		shader.setVec3("viewPos", camera.position);
