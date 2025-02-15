@@ -107,7 +107,7 @@ int main() {
 	glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
 
 	// view matrix
-	glm::mat4 lightView = glm::lookAt(glm::vec3(-2.0f, 4.0f, -1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
 
 	// light space transformation matrix
 	glm::mat4 lightSpaceMatrix = lightProjection * lightView;
@@ -159,7 +159,7 @@ int main() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	// attach depth texture to depth buffer
@@ -170,12 +170,11 @@ int main() {
 	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	shader.use();
-	shader.setInt("_MainTex", 0);
-	shader.setInt("shadowMap", 1);
-
 	screenShader.use();
 	screenShader.setInt("screenTexture", 0);
+
+	depthShader.use();
+	depthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
 	glEnable(GL_CULL_FACE);
 	// back face culling
@@ -183,7 +182,9 @@ int main() {
 	// depth testing
 	glEnable(GL_DEPTH_TEST);
 
-	glBindTextureUnit(0, depthMap);
+	
+	glBindTextureUnit(1, normalMap);
+	glBindTextureUnit(2, depthMap);
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -194,21 +195,17 @@ int main() {
 
 		//RENDER
 
+		glBindTextureUnit(0, texture);
+
 		cameraController.move(window, &camera, deltaTime);
 
 		// first pass
 		// render to depth map
 		depthShader.use();
-		depthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
 		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 		glClear(GL_DEPTH_BUFFER_BIT);
-
-		depthShader.use();
-		//depthShader.setMat4("model", glm::mat4(1.0f));
-		//glBindVertexArray(planeVAO);
-		//glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
 
@@ -216,19 +213,27 @@ int main() {
 
 		monkeyModel.draw();
 
+		depthShader.setMat4("model", glm::mat4(1.0f));
+		glBindVertexArray(planeVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
 
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
+
 		// render with shadow mapping
-		glViewport(0, 0, screenWidth, screenHeight);
+		glViewport(0, 0, screenWidth, screenHeight); // reset viewport
 		glClearColor(0.6f, 0.8f, 0.92f, 1.0f); // background color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.use();
+		shader.setInt("_MainTex", 0);
 		shader.setInt("normalMap", 1);
+		shader.setInt("shadowMap", 2);
 		shader.setMat4("_ViewProjection", camera.projectionMatrix() * camera.viewMatrix());
 		shader.setVec3("viewPos", camera.position);
 		shader.setVec3("lightPos", lightPos);
+		shader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 		shader.setFloat("_Material.Ka", material.Ka);
 		shader.setFloat("_Material.Kd", material.Kd);
 		shader.setFloat("_Material.Ks", material.Ks);
@@ -307,7 +312,7 @@ void drawUI() {
 	// stretch image
 	ImVec2 windowSize = ImGui::GetWindowSize();
 	// invert 0-1 V to flip vertically
-	ImGui::Image((ImTextureID)0, windowSize, ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image((ImTextureID)3, windowSize, ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::EndChild();
 	ImGui::End();
 
