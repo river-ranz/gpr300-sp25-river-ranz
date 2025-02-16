@@ -10,14 +10,12 @@ in Surface
 	vec3 TangentLightPos;
 	vec3 TangentViewPos;
 	vec3 TangentFragPos;
-	vec3 FragPos;
 	vec4 FragPosLightSpace;
 }fs_in;
 
-uniform sampler2D normalMap;
-
 // 2D texture sampler
 uniform sampler2D _MainTex;
+uniform sampler2D normalMap;
 uniform sampler2D shadowMap;
 
 // white light
@@ -90,8 +88,6 @@ void main()
 	FragColor = vec4(objectColor * lightColor, 1.0);
 
 //	vec3 color = texture(_MainTex, fs_in.TexCoord).rgb;
-//    
-//    vec3 lightColor = vec3(1.0);
 //    // ambient
 //    vec3 ambient = 0.15 * lightColor;
 //    // diffuse

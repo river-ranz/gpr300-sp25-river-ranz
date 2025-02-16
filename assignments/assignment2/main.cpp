@@ -75,6 +75,9 @@ int main() {
 	// vertical field of view in degrees
 	camera.fov = 60.0f;
 
+	// depth testing
+	glEnable(GL_DEPTH_TEST);
+
 	glm::vec3 lightPos(0.0, -1.0, 0.0);
 
 	unsigned int quadVAO, quadVBO;
@@ -103,7 +106,7 @@ int main() {
 	glBindVertexArray(0);
 
 	// orthographic projection light source
-	float nearPlane = 1.0f, farPlane = 7.5f;
+	float nearPlane = 3.0f, farPlane = 10.0f;
 	glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
 
 	// view matrix
@@ -127,7 +130,7 @@ int main() {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
-	// creature texture
+	// create texture
 	GLuint textureColorbuffer;
 	glGenTextures(1, &textureColorbuffer);
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
@@ -179,12 +182,6 @@ int main() {
 	glEnable(GL_CULL_FACE);
 	// back face culling
 	glCullFace(GL_BACK);
-	// depth testing
-	glEnable(GL_DEPTH_TEST);
-
-	
-	glBindTextureUnit(1, normalMap);
-	glBindTextureUnit(2, depthMap);
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -195,9 +192,11 @@ int main() {
 
 		//RENDER
 
-		glBindTextureUnit(0, texture);
-
 		cameraController.move(window, &camera, deltaTime);
+
+		glBindTextureUnit(0, texture);
+		glBindTextureUnit(1, normalMap);
+		glBindTextureUnit(2, depthMap);
 
 		// first pass
 		// render to depth map
@@ -218,13 +217,16 @@ int main() {
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-
 		// render with shadow mapping
 		glViewport(0, 0, screenWidth, screenHeight); // reset viewport
 		glClearColor(0.6f, 0.8f, 0.92f, 1.0f); // background color
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClearColor(0.6f, 0.8f, 0.92f, 1.0f); // background color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
 
 		shader.use();
 		shader.setInt("_MainTex", 0);
@@ -250,20 +252,20 @@ int main() {
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		// second pass
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDisable(GL_DEPTH_TEST);
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//glDisable(GL_DEPTH_TEST);
+		//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		//glClear(GL_COLOR_BUFFER_BIT);
 
-		screenShader.use();
-		if (grayscale == false) { screenShader.setInt("grayscale", 0); }
-		else { screenShader.setInt("grayscale", 1); }
-		screenShader.setVec3("colorAvg", colorAvg);
-		if (blur == false) { screenShader.setInt("blur", 0); }
-		else { screenShader.setInt("blur", 1); }
-		glBindVertexArray(quadVAO);
-		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		//screenShader.use();
+		//if (grayscale == false) { screenShader.setInt("grayscale", 0); }
+		//else { screenShader.setInt("grayscale", 1); }
+		//screenShader.setVec3("colorAvg", colorAvg);
+		//if (blur == false) { screenShader.setInt("blur", 0); }
+		//else { screenShader.setInt("blur", 1); }
+		//glBindVertexArray(quadVAO);
+		//glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+		//glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		drawUI();
 
