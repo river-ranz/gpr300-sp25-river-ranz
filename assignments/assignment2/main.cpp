@@ -61,16 +61,6 @@ int main() {
 	ew::Transform planeTransform;
 	planeTransform.position = glm::vec3(0, -2.0, 0);
 
-	// orthographic projection light source
-	float nearPlane = 5.0f, farPlane = -2.0f;
-	glm::mat4 lightProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, nearPlane, farPlane);
-
-	// view matrix
-	glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-
-	// light space transformation matrix
-	glm::mat4 lightSpaceMatrix = lightProjection * lightView;
-
 	ew::Shader shader = ew::Shader("assets/lit.vert", "assets/lit.frag");
 	ew::Shader depthShader = ew::Shader("assets/depthShader.vert", "assets/depthShader.frag");
 
@@ -105,8 +95,9 @@ int main() {
 	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	depthShader.use();
-	depthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+	// orthographic projection light source
+	float nearPlane = 5.0f, farPlane = -2.0f;
+	glm::mat4 lightProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, nearPlane, farPlane);
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -123,9 +114,16 @@ int main() {
 		glBindTextureUnit(1, normalMap);
 		glBindTextureUnit(2, depthMap);
 
+		// view matrix
+		glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+
+		// light space transformation matrix
+		glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
 		// first pass
 		// render to depth map
 		depthShader.use();
+		depthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
