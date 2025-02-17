@@ -11,6 +11,7 @@ in Surface
 	vec3 TangentViewPos;
 	vec3 TangentFragPos;
 	vec4 FragPosLightSpace;
+	vec3 FragPos;
 }fs_in;
 
 // 2D texture sampler
@@ -37,25 +38,30 @@ struct Material
 
 uniform Material _Material;
 
-float ShadowCalculation(vec4 fragPosLightSpace)
+float ShadowCalculation(vec4 fragPosLightSpace, float bias)
 {
 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
 	// transform to 0-1
 	projCoords = projCoords * 0.5 + 0.5;
+
+	if (projCoords.z > 1.0)
+    {
+		return 0.0f;
+	}
+
 	// get closest depth value
 	float closestDepth = texture(shadowMap, projCoords.xy).r;
 	// get depth of current frag
 	float currentDepth = projCoords.z;
+
 	// is frag in shadow?
-	float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+	float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
 
 	return shadow;
 }
 
 void main()
 {
-
-
 	vec3 normal = texture(normalMap, fs_in.TexCoord).rgb;
 	normal = normalize(normal * 2.0 - 1.0);
 
@@ -73,36 +79,15 @@ void main()
 	vec3 h = normalize(toLight + toEye);
 	float specularFactor = pow(max(dot(normal, h), 0.0), _Material.Shininess);
 
+	vec3 lightDir = normalize(fs_in.TangentLightPos - fs_in.FragPos);
+
+	float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);  
+
 	// shadow
-	float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
-
-	// combination of specular and diffuse reflection
-	//vec3 lightColor = (_Material.Kd * diffuseFactor + _Material.Ks * specularFactor) * _LightColor;
-
-	// add ambient light
-	//lightColor += _AmbientColor * _Material.Ka;
+	float shadow = ShadowCalculation(fs_in.FragPosLightSpace, bias);
 
 	vec3 lightColor = (((_AmbientColor * _Material.Ka) + (1.0 - shadow)) * (_Material.Kd * diffuseFactor + _Material.Ks * specularFactor)) * _LightColor;
 
 	vec3 objectColor = texture(_MainTex, fs_in.TexCoord).rgb;
 	FragColor = vec4(objectColor * lightColor, 1.0);
-
-//	vec3 color = texture(_MainTex, fs_in.TexCoord).rgb;
-//    // ambient
-//    vec3 ambient = 0.15 * lightColor;
-//    // diffuse
-//    vec3 lightDir = normalize(fs_in.TangentLightPos - fs_in.FragPos);
-//    float diff = max(dot(lightDir, normal), 0.0);
-//    vec3 diffuse = diff * lightColor;
-//    // specular
-//    vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.FragPos);
-//    float spec = 0.0;
-//    vec3 halfwayDir = normalize(lightDir + viewDir);  
-//    spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
-//    vec3 specular = spec * lightColor;    
-//    // calculate shadow
-//    float shadow = ShadowCalculation(fs_in.FragPosLightSpace);       
-//    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;    
-//    
-//    FragColor = vec4(lighting, 1.0);
 }

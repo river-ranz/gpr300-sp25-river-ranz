@@ -34,6 +34,7 @@ out Surface
 	vec3 TangentViewPos;
 	vec3 TangentFragPos;
 	vec4 FragPosLightSpace;
+	vec3 FragPos;
 }vs_out;
 
 void main()
@@ -41,6 +42,8 @@ void main()
 	// transform vertex position to world space
 	// transform vertex normal to world space using normal matrix
 	vs_out.TexCoord = vTexCoord;
+
+	vs_out.FragPos = vec3(_Model * vec4(vPos, 1.0));
 
 	mat3 TBN = transpose(mat3(T, B, N));
 
