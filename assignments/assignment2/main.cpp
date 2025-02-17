@@ -39,29 +39,9 @@ struct Material
 ew::Camera camera;
 ew::CameraController cameraController;
 
+glm::vec3 lightPos(-0.25f, -1.0f, -0.5f);
+
 GLuint depthMap;
-
-float quadVertices[] =
-{
-	-1.0f,  1.0f,  0.0f, 1.0f,
-	-1.0f, -1.0f,  0.0f, 0.0f,
-	 1.0f, -1.0f,  1.0f, 0.0f,
-
-	-1.0f,  1.0f,  0.0f, 1.0f,
-	 1.0f, -1.0f,  1.0f, 0.0f,
-	 1.0f,  1.0f,  1.0f, 1.0f
-};
-
-float planeVertices[] =
-{
-	 5.0f, -2.5f,  5.0f, 0.0f, 1.0f, 0.0f,  5.0f,  0.0f,
-	-5.0f, -2.5f, -5.0f, 0.0f, 1.0f, 0.0f,  0.0f,  5.0f,
-	-5.0f, -2.5f,  5.0f, 0.0f, 1.0f, 0.0f,  0.0f,  0.0f,
-	
-	 5.0f, -2.5f,  5.0f, 0.0f, 1.0f, 0.0f,  5.0f,  0.0f,
-	 5.0f, -2.5f, -5.0f, 0.0f, 1.0f, 0.0f,  5.0f,  5.0f,
-	-5.0f, -2.5f, -5.0f, 0.0f, 1.0f, 0.0f,  0.0f,  5.0f
-};
 
 int main() {
 	GLFWwindow* window = initWindow("Assignment 2", screenWidth, screenHeight);
@@ -77,16 +57,13 @@ int main() {
 	// depth testing
 	glEnable(GL_DEPTH_TEST);
 
-	glm::vec3 lightPos(-1.0f, -4.0f, -1.0f);
-
 	ew::Mesh planeMesh(ew::createPlane(5.0f, 5.0f, 10));
 	ew::Transform planeTransform;
 	planeTransform.position = glm::vec3(0, -2.0, 0);
 
-
 	// orthographic projection light source
-	float nearPlane = 3.0f, farPlane = 10.0f;
-	glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+	float nearPlane = 5.0f, farPlane = -2.0f;
+	glm::mat4 lightProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, nearPlane, farPlane);
 
 	// view matrix
 	glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
@@ -156,14 +133,14 @@ int main() {
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
+		depthShader.setMat4("model", planeTransform.modelMatrix());
+		planeMesh.draw();
+
 		monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
 
 		depthShader.setMat4("model", monkeyTransform.modelMatrix());
 
 		monkeyModel.draw();
-
-		depthShader.setMat4("model", planeTransform.modelMatrix());
-		planeMesh.draw();
 
 		// render with shadow mapping
 		glViewport(0, 0, screenWidth, screenHeight); // reset viewport
@@ -185,14 +162,14 @@ int main() {
 		shader.setFloat("_Material.Ks", material.Ks);
 		shader.setFloat("_Material.Shininess", material.Shininess);
 
+		shader.setMat4("_Model", planeTransform.modelMatrix());
+		planeMesh.draw();
+
 		monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
 
 		shader.setMat4("_Model", monkeyTransform.modelMatrix());
 
 		monkeyModel.draw();
-
-		shader.setMat4("_Model", planeTransform.modelMatrix());
-		planeMesh.draw();
 
 		drawUI();
 
@@ -220,6 +197,12 @@ void drawUI() {
 		ImGui::SliderFloat("DiffuseK", &material.Kd, 0.0f, 1.0f);
 		ImGui::SliderFloat("SpecularK", &material.Ks, 0.0f, 1.0f);
 		ImGui::SliderFloat("Shininess", &material.Shininess, 2.0f, 1024.0f);
+	}
+	if (ImGui::CollapsingHeader("Light Position"))
+	{
+		ImGui::SliderFloat("X", &lightPos.x, -1.0f, 1.0f);
+		ImGui::SliderFloat("Y", &lightPos.y, -1.0f, 1.0f);
+		ImGui::SliderFloat("Z", &lightPos.z, -1.0f, 1.0f);
 	}
 	if (ImGui::Button("Reset Camera"))
 	{

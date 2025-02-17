@@ -46,7 +46,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, float bias)
 
 	if (projCoords.z > 1.0)
     {
-		return 0.0f;
+		return 0.0;
 	}
 
 	// get closest depth value
@@ -55,7 +55,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, float bias)
 	float currentDepth = projCoords.z;
 
 	// is frag in shadow?
-	float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+	float shadow = (currentDepth - bias) > closestDepth ? 1.0 : 0.0;
 
 	return shadow;
 }

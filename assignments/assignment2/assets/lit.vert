@@ -39,8 +39,6 @@ out Surface
 
 void main()
 {
-	// transform vertex position to world space
-	// transform vertex normal to world space using normal matrix
 	vs_out.TexCoord = vTexCoord;
 
 	vs_out.FragPos = vec3(_Model * vec4(vPos, 1.0));
@@ -54,6 +52,5 @@ void main()
 
 	// transform vertex position to homogeneous clip space
 	gl_Position = _ViewProjection * _Model * vec4(vPos, 1.0);
-
 }
 
