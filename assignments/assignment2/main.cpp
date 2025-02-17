@@ -41,6 +41,8 @@ ew::CameraController cameraController;
 
 glm::vec3 lightPos(-0.25f, -1.0f, -0.5f);
 
+float bias;
+
 GLuint depthMap;
 
 int main() {
@@ -159,6 +161,7 @@ int main() {
 		shader.setFloat("_Material.Kd", material.Kd);
 		shader.setFloat("_Material.Ks", material.Ks);
 		shader.setFloat("_Material.Shininess", material.Shininess);
+		shader.setFloat("_Bias", bias);
 
 		shader.setMat4("_Model", planeTransform.modelMatrix());
 		planeMesh.draw();
@@ -202,6 +205,7 @@ void drawUI() {
 		ImGui::SliderFloat("Y", &lightPos.y, -1.0f, 1.0f);
 		ImGui::SliderFloat("Z", &lightPos.z, -1.0f, 1.0f);
 	}
+	ImGui::SliderFloat("bias", &bias, 0.0, 0.5);
 	if (ImGui::Button("Reset Camera"))
 	{
 		resetCamera(&camera, &cameraController);

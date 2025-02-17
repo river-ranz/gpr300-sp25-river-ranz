@@ -24,6 +24,8 @@ uniform vec3 _LightColor = vec3(1.0);
 
 uniform vec3 _AmbientColor = vec3(0.3, 0.4, 0.46);
 
+uniform float _Bias;
+
 struct Material
 {
 	// ambient coefficient (0-1)
@@ -54,8 +56,18 @@ float ShadowCalculation(vec4 fragPosLightSpace, float bias)
 	// get depth of current frag
 	float currentDepth = projCoords.z;
 
-	// is frag in shadow?
-	float shadow = (currentDepth - bias) > closestDepth ? 1.0 : 0.0;
+	float shadow = 0.0;
+	vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+
+	for(int x = -1; x <= 1; ++x)
+	{
+		for(int y = -1; y <= 1; ++y)
+		{
+			float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+		}    
+	}
+	shadow /= 9.0;
 
 	return shadow;
 }
@@ -81,7 +93,7 @@ void main()
 
 	vec3 lightDir = normalize(fs_in.TangentLightPos - fs_in.FragPos);
 
-	float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);  
+	float bias = max(0.05 * (1.0 - dot(normal, lightDir)), _Bias);  
 
 	// shadow
 	float shadow = ShadowCalculation(fs_in.FragPosLightSpace, bias);
