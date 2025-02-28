@@ -15,14 +15,14 @@
 class Vec3Key
 {
 public:
-	float time; // 0-max
-	glm::vec3 value;
+	float time = 0.0f; // 0-max
+	glm::vec3 value = glm::vec3(0, 0, 0);
 };
 
 class AnimationClip // animation data
 {
 public:
-	float duration; // 0-duration
+	float duration = 0.0f; // 0-duration
 	// times in ascending order
 	std::vector<Vec3Key> positionKeys; // position keyframes
 	std::vector<Vec3Key> rotationKeys; // rotation keyframes
@@ -31,8 +31,14 @@ public:
 
 class Animator // plays back
 {
+public:
 	AnimationClip* clip;
 	bool isPlaying, isLoop;
 	float playbackSpeed; // negative is backwards
 	float playbackTime; // current time in animation
+
+	void playAnimation();
+	glm::vec3 posAnim();
+	glm::vec3 rotAnim();
+	glm::vec3 scaleAnim();
 };

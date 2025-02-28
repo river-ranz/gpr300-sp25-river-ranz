@@ -44,13 +44,11 @@ glm::vec3 lightPos(-0.25f, -1.0f, -0.5f);
 
 float bias;
 
-bool isPlaying = false, isLoop = false;
-float playbackSpeed = 1.0f, playbackTime = 0.0f, duration = 0.0f;
-int numPosFrames, numRotFrames, numScaleFrames;
-
-AnimationClip clip;
+Animator animator;
 
 GLuint depthMap;
+
+Vec3Key zeroKey;
 
 int main() {
 	GLFWwindow* window = initWindow("Assignment 4", screenWidth, screenHeight);
@@ -108,6 +106,11 @@ int main() {
 	float nearPlane = 5.0f, farPlane = -2.0f;
 	glm::mat4 lightProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, nearPlane, farPlane);
 
+	animator.isPlaying = false;
+	animator.isLoop = false;
+	animator.playbackSpeed = 1.0f;
+	animator.playbackTime = 0.0f;
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
@@ -143,7 +146,7 @@ int main() {
 		depthShader.setMat4("model", planeTransform.modelMatrix());
 		planeMesh.draw();
 
-		//monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
+
 
 		depthShader.setMat4("model", monkeyTransform.modelMatrix());
 
@@ -173,7 +176,7 @@ int main() {
 		shader.setMat4("_Model", planeTransform.modelMatrix());
 		planeMesh.draw();
 
-		//monkeyTransform.rotation = glm::rotate(monkeyTransform.rotation, deltaTime, glm::vec3(0.0, 1.0, 0.0));
+
 
 		shader.setMat4("_Model", monkeyTransform.modelMatrix());
 
@@ -192,9 +195,6 @@ void resetCamera(ew::Camera* camera, ew::CameraController* controller)
 	camera->target = glm::vec3(0);
 	controller->yaw = controller->pitch = 0;
 }
-
-void addFrame(int& frames) { frames++; }
-void removeFrame(int& frames) { if (frames > 0) { frames--; } }
 
 void drawUI() {
 	ImGui_ImplGlfw_NewFrame();
@@ -233,52 +233,52 @@ void drawUI() {
 	ImGui::End();
 
 	ImGui::Begin("Animation");
-	ImGui::Checkbox("Playing", &isPlaying);
-	ImGui::Checkbox("Loop", &isLoop);
-	ImGui::SliderFloat("Playback Speed", &playbackSpeed, -1.0f, 1.0f);
-	ImGui::SliderFloat("Playback Time", &playbackTime, 0.0f, duration);
-	ImGui::SliderFloat("Duration", &duration, 0.0f, 100.0f);
+	ImGui::Checkbox("Playing", &animator.isPlaying);
+	ImGui::Checkbox("Loop", &animator.isLoop);
+	ImGui::SliderFloat("Playback Speed", &animator.playbackSpeed, -1.0f, 1.0f);
+	ImGui::SliderFloat("Playback Time", &animator.playbackTime, 0.0f, animator.clip->duration);
+	ImGui::SliderFloat("Duration", &animator.clip->duration, 0.0f, 100.0f);
 	ImGui::CollapsingHeader("Position Keys");
 	{
-		for (int i = 0; i < numPosFrames; i++)
+		for (int i = 0; i < animator.clip->positionKeys.size(); i++)
 		{
 			ImGui::PushID(i);
-			ImGui::SliderFloat("Time", &clip.positionKeys[i].time, 0.0f, duration);
-			ImGui::SliderFloat("Value", &clip.positionKeys[i].value.x, -10.0f, 10.0f);
-			ImGui::SliderFloat2("Value", &clip.positionKeys[i].value.y, -10.0f, 10.0f);
-			ImGui::SliderFloat3("Value", &clip.positionKeys[i].value.z, -10.0f, 10.0f);
+			ImGui::SliderFloat("Time", &animator.clip->positionKeys[i].time, 0.0f, animator.clip->duration);
+			ImGui::SliderFloat("Value", &animator.clip->positionKeys[i].value.x, -10.0f, 10.0f);
+			ImGui::SliderFloat2("Value", &animator.clip->positionKeys[i].value.y, -10.0f, 10.0f);
+			ImGui::SliderFloat3("Value", &animator.clip->positionKeys[i].value.z, -10.0f, 10.0f);
 			ImGui::PopID();
 		}
-		ImGui::Button("Add Keyframe"); { addFrame(numPosFrames); }
-		ImGui::Button("Remove Keyframe"); { removeFrame(numPosFrames); }
+		ImGui::Button("Add Keyframe"); { animator.clip->positionKeys.push_back(zeroKey); }
+		ImGui::Button("Remove Keyframe"); { animator.clip->positionKeys.pop_back(); }
 	}
 	ImGui::CollapsingHeader("Rotation Keys");
 	{
-		for (int i = 0; i < numRotFrames; i++)
+		for (int i = 0; i < animator.clip->rotationKeys.size(); i++)
 		{
 			ImGui::PushID(i);
-			ImGui::SliderFloat("Time", &clip.rotationKeys[i].time, 0.0f, duration);
-			ImGui::SliderFloat("Value", &clip.rotationKeys[i].value.x, -10.0f, 10.0f);
-			ImGui::SliderFloat2("Value", &clip.rotationKeys[i].value.y, -10.0f, 10.0f);
-			ImGui::SliderFloat3("Value", &clip.rotationKeys[i].value.z, -10.0f, 10.0f);
+			ImGui::SliderFloat("Time", &animator.clip->rotationKeys[i].time, 0.0f, animator.clip->duration);
+			ImGui::SliderFloat("Value", &animator.clip->rotationKeys[i].value.x, -10.0f, 10.0f);
+			ImGui::SliderFloat2("Value", &animator.clip->rotationKeys[i].value.y, -10.0f, 10.0f);
+			ImGui::SliderFloat3("Value", &animator.clip->rotationKeys[i].value.z, -10.0f, 10.0f);
 			ImGui::PopID();
 		}
-		ImGui::Button("Add Keyframe"); { addFrame(numRotFrames); }
-		ImGui::Button("Remove Keyframe"); { removeFrame(numRotFrames); }
+		ImGui::Button("Add Keyframe"); { animator.clip->rotationKeys.push_back(zeroKey); }
+		ImGui::Button("Remove Keyframe"); { animator.clip->rotationKeys.pop_back(); }
 	}
 	ImGui::CollapsingHeader("Scale Keys");
 	{
-		for (int i = 0; i < numScaleFrames; i++)
+		for (int i = 0; i < animator.clip->scaleKeys.size(); i++)
 		{
 			ImGui::PushID(i);
-			ImGui::SliderFloat("Time", &clip.scaleKeys[i].time, 0.0f, duration);
-			ImGui::SliderFloat("Value", &clip.scaleKeys[i].value.x, -10.0f, 10.0f);
-			ImGui::SliderFloat2("Value", &clip.scaleKeys[i].value.y, -10.0f, 10.0f);
-			ImGui::SliderFloat3("Value", &clip.scaleKeys[i].value.z, -10.0f, 10.0f);
+			ImGui::SliderFloat("Time", &animator.clip->scaleKeys[i].time, 0.0f, animator.clip->duration);
+			ImGui::SliderFloat("Value", &animator.clip->scaleKeys[i].value.x, -10.0f, 10.0f);
+			ImGui::SliderFloat2("Value", &animator.clip->scaleKeys[i].value.y, -10.0f, 10.0f);
+			ImGui::SliderFloat3("Value", &animator.clip->scaleKeys[i].value.z, -10.0f, 10.0f);
 			ImGui::PopID();
 		}
-		ImGui::Button("Add Keyframe"); { addFrame(numScaleFrames); }
-		ImGui::Button("Remove Keyframe"); { removeFrame(numScaleFrames); }
+		ImGui::Button("Add Keyframe"); { animator.clip->scaleKeys.push_back(zeroKey); }
+		ImGui::Button("Remove Keyframe"); { animator.clip->scaleKeys.pop_back(); }
 	}
 	ImGui::End();
 
