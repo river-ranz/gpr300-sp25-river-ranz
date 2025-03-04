@@ -10,12 +10,22 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <glm/fwd.hpp>
+#include <glm/glm.hpp>
 
 #include <vector>
+
+#include <ew/shader.h>
+#include <ew/model.h>
+#include <ew/camera.h>
+#include <ew/transform.h>
+#include <ew/cameraController.h>
+#include <ew/texture.h>
+#include <ew/procGen.h>
 
 // because the glm::vec3 is giving me errors for no reason >:(
 class vec3
 {
+public:
 	float x = 0.0f, y = 0.0f, z = 0.0f;
 };
 
@@ -44,8 +54,13 @@ public:
 	float playbackSpeed; // negative is backwards
 	float playbackTime; // current time in animation
 
+	Vec3Key pos, rot, scale;
+
 	void playAnimation();
-	vec3 posAnim();
-	vec3 rotAnim();
-	vec3 scaleAnim();
+	void posAnim();
+	void rotAnim();
+	void scaleAnim();
+
+private:
+	Vec3Key nextP, prevP, nextR, prevR, nextS, prevS;
 };

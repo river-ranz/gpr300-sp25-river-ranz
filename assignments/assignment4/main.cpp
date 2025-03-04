@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <vector>
 
 #include <ew/external/glad.h>
 
@@ -17,7 +18,7 @@
 #include <ew/texture.h>
 #include <ew/procGen.h>
 
-#include "assets/animation.h"
+#include "animation.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 GLFWwindow* initWindow(const char* title, int width, int height);
@@ -111,6 +112,8 @@ int main() {
 	animator.isLoop = false;
 	animator.playbackSpeed = 1.0f;
 	animator.playbackTime = 0.0f;
+
+	animator.clip = new AnimationClip;
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
