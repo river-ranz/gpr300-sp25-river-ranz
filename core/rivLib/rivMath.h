@@ -28,6 +28,7 @@ namespace riv
 	};
 
 	vec3 lerp(vec3 a, vec3 b, float t);
+	vec3 invLerp(vec3 a, vec3 b, float x);
 
 	float clamp(float val, float min, float max);
 

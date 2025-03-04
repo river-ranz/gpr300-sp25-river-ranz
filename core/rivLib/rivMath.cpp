@@ -16,6 +16,18 @@ namespace riv
 		return lerped;
 	}
 
+	vec3 invLerp(vec3 a, vec3 b, float x)
+	{
+		x = clamp(x, 0.0f, 1.0f);
+
+		vec3 lerped;
+		lerped.x = (x - a.x) / (b.x - a.x);
+		lerped.y = (x - a.y) / (b.y - a.y);
+		lerped.z = (x - a.z) / (b.z - a.z);
+
+		return lerped;
+	}
+
 	float clamp(float val, float min, float max)
 	{
 		if (val < min) { val = min; }

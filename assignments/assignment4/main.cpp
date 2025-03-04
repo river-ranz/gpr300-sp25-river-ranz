@@ -140,17 +140,27 @@ int main() {
 
 		if (animator.isPlaying)
 		{
+			if (animator.playbackTime >= animator.clip->duration)
+			{
+				animator.playbackTime = 0.0f;
+				if (!animator.isLoop) { animator.isPlaying == false; }
+			}
+			else { animator.playbackTime += deltaTime; }
+
 			riv::vec3 *pos = nullptr, *rot = nullptr, *scale = nullptr;
 			if (animator.clip->positionKeys.size() > 0)
 			{
+				pos = new riv::vec3;
 				*pos = animator.posAnim();
 			}
 			if (animator.clip->rotationKeys.size() > 0)
 			{
+				rot = new riv::vec3;
 				*rot = animator.rotAnim();
 			}
 			if (animator.clip->scaleKeys.size() > 0)
 			{
+				scale = new riv::vec3;
 				*scale = animator.scaleAnim();
 			}
 
@@ -280,9 +290,7 @@ void drawUI() {
 		{
 			ImGui::PushID(i);
 			ImGui::SliderFloat("Time", &animator.clip->positionKeys[i].time, 0.0f, animator.clip->duration);
-			ImGui::SliderFloat("Value", &animator.clip->positionKeys[i].value.x, -10.0f, 10.0f);
-			ImGui::SliderFloat2("Value", &animator.clip->positionKeys[i].value.y, -10.0f, 10.0f);
-			ImGui::SliderFloat3("Value", &animator.clip->positionKeys[i].value.z, -10.0f, 10.0f);
+			ImGui::SliderFloat3("Value", (float*)&animator.clip->positionKeys[i].value, -10.0f, 10.0f);
 			ImGui::PopID();
 		}
 		if (ImGui::Button("Add Keyframe")) { addKeyframe(animator.clip->positionKeys); }
@@ -294,9 +302,7 @@ void drawUI() {
 		{
 			ImGui::PushID(i);
 			ImGui::SliderFloat("Time", &animator.clip->rotationKeys[i].time, 0.0f, animator.clip->duration);
-			ImGui::SliderFloat("Value", &animator.clip->rotationKeys[i].value.x, -10.0f, 10.0f);
-			ImGui::SliderFloat2("Value", &animator.clip->rotationKeys[i].value.y, -10.0f, 10.0f);
-			ImGui::SliderFloat3("Value", &animator.clip->rotationKeys[i].value.z, -10.0f, 10.0f);
+			ImGui::SliderFloat3("Value", (float*)&animator.clip->rotationKeys[i].value, -10.0f, 10.0f);
 			ImGui::PopID();
 		}
 		if (ImGui::Button("Add Keyframe")) { addKeyframe(animator.clip->rotationKeys); }
@@ -308,9 +314,7 @@ void drawUI() {
 		{
 			ImGui::PushID(i);
 			ImGui::SliderFloat("Time", &animator.clip->scaleKeys[i].time, 0.0f, animator.clip->duration);
-			ImGui::SliderFloat("Value", &animator.clip->scaleKeys[i].value.x, -10.0f, 10.0f);
-			ImGui::SliderFloat2("Value", &animator.clip->scaleKeys[i].value.y, -10.0f, 10.0f);
-			ImGui::SliderFloat3("Value", &animator.clip->scaleKeys[i].value.z, -10.0f, 10.0f);
+			ImGui::SliderFloat3("Value", (float*)&animator.clip->scaleKeys[i].value, -10.0f, 10.0f);
 			ImGui::PopID();
 		}
 		if (ImGui::Button("Add Keyframe")) { addKeyframe(animator.clip->scaleKeys); }
