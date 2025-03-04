@@ -18,12 +18,14 @@
 #include <ew/texture.h>
 #include <ew/procGen.h>
 
-#include "animation.h"
+#include <rivLib/animation.h>
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 GLFWwindow* initWindow(const char* title, int width, int height);
 void drawUI();
 void resetCamera(ew::Camera* camera, ew::CameraController* controller);
+void addKeyframe(std::vector<riv::Vec3Key>& vec);
+void removeKeyframe(std::vector<riv::Vec3Key>& vec);
 
 //Global state
 int screenWidth = 1080;
@@ -46,11 +48,11 @@ glm::vec3 lightPos(-0.25f, -1.0f, -0.5f);
 
 float bias;
 
-Animator animator;
+riv::Animator animator;
 
 GLuint depthMap;
 
-Vec3Key zeroKey;
+riv::Vec3Key zeroKey;
 
 int main() {
 	GLFWwindow* window = initWindow("Assignment 4", screenWidth, screenHeight);
@@ -113,7 +115,7 @@ int main() {
 	animator.playbackSpeed = 1.0f;
 	animator.playbackTime = 0.0f;
 
-	animator.clip = new AnimationClip;
+	animator.clip = new riv::AnimationClip;
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -135,6 +137,36 @@ int main() {
 
 		// light space transformation matrix
 		glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+		if (animator.isPlaying)
+		{
+			riv::vec3 *pos = nullptr, *rot = nullptr, *scale = nullptr;
+			if (animator.clip->positionKeys.size() > 0)
+			{
+				*pos = animator.posAnim();
+			}
+			if (animator.clip->rotationKeys.size() > 0)
+			{
+				*rot = animator.rotAnim();
+			}
+			if (animator.clip->scaleKeys.size() > 0)
+			{
+				*scale = animator.scaleAnim();
+			}
+
+			if (pos != nullptr)
+			{
+				monkeyTransform.position = glm::vec3(pos->x, pos->y, pos->z);
+			}
+			if (rot != nullptr)
+			{
+				monkeyTransform.rotation = glm::vec3(rot->x, rot->y, rot->z);
+			}
+			if (scale != nullptr)
+			{
+				monkeyTransform.scale = glm::vec3(scale->x, scale->y, scale->z);
+			}
+		}
 
 		// first pass
 		// render to depth map
@@ -242,7 +274,7 @@ void drawUI() {
 	ImGui::SliderFloat("Playback Speed", &animator.playbackSpeed, -1.0f, 1.0f);
 	ImGui::SliderFloat("Playback Time", &animator.playbackTime, 0.0f, animator.clip->duration);
 	ImGui::SliderFloat("Duration", &animator.clip->duration, 0.0f, 100.0f);
-	ImGui::CollapsingHeader("Position Keys");
+	if (ImGui::CollapsingHeader("Position Keys"))
 	{
 		for (int i = 0; i < animator.clip->positionKeys.size(); i++)
 		{
@@ -253,10 +285,10 @@ void drawUI() {
 			ImGui::SliderFloat3("Value", &animator.clip->positionKeys[i].value.z, -10.0f, 10.0f);
 			ImGui::PopID();
 		}
-		ImGui::Button("Add Keyframe"); { animator.clip->positionKeys.push_back(zeroKey); }
-		ImGui::Button("Remove Keyframe"); { animator.clip->positionKeys.pop_back(); }
+		if (ImGui::Button("Add Keyframe")) { addKeyframe(animator.clip->positionKeys); }
+		if (ImGui::Button("Remove Keyframe")) { removeKeyframe(animator.clip->positionKeys); }
 	}
-	ImGui::CollapsingHeader("Rotation Keys");
+	if (ImGui::CollapsingHeader("Rotation Keys"))
 	{
 		for (int i = 0; i < animator.clip->rotationKeys.size(); i++)
 		{
@@ -267,10 +299,10 @@ void drawUI() {
 			ImGui::SliderFloat3("Value", &animator.clip->rotationKeys[i].value.z, -10.0f, 10.0f);
 			ImGui::PopID();
 		}
-		ImGui::Button("Add Keyframe"); { animator.clip->rotationKeys.push_back(zeroKey); }
-		ImGui::Button("Remove Keyframe"); { animator.clip->rotationKeys.pop_back(); }
+		if (ImGui::Button("Add Keyframe")) { addKeyframe(animator.clip->rotationKeys); }
+		if (ImGui::Button("Remove Keyframe")) { removeKeyframe(animator.clip->rotationKeys); }
 	}
-	ImGui::CollapsingHeader("Scale Keys");
+	if (ImGui::CollapsingHeader("Scale Keys"))
 	{
 		for (int i = 0; i < animator.clip->scaleKeys.size(); i++)
 		{
@@ -281,13 +313,23 @@ void drawUI() {
 			ImGui::SliderFloat3("Value", &animator.clip->scaleKeys[i].value.z, -10.0f, 10.0f);
 			ImGui::PopID();
 		}
-		ImGui::Button("Add Keyframe"); { animator.clip->scaleKeys.push_back(zeroKey); }
-		ImGui::Button("Remove Keyframe"); { animator.clip->scaleKeys.pop_back(); }
+		if (ImGui::Button("Add Keyframe")) { addKeyframe(animator.clip->scaleKeys); }
+		if (ImGui::Button("Remove Keyframe")) { removeKeyframe(animator.clip->scaleKeys); }
 	}
 	ImGui::End();
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void addKeyframe(std::vector<riv::Vec3Key> &vec)
+{
+	vec.push_back(zeroKey);
+}
+
+void removeKeyframe(std::vector<riv::Vec3Key> &vec)
+{
+	if (!vec.empty()) { vec.pop_back(); }
 }
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
