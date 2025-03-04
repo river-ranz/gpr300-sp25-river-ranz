@@ -9,14 +9,21 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <glm/fwd.hpp>
 
 #include <vector>
+
+// because the glm::vec3 is giving me errors for no reason >:(
+class vec3
+{
+	float x = 0.0f, y = 0.0f, z = 0.0f;
+};
 
 class Vec3Key
 {
 public:
 	float time = 0.0f; // 0-max
-	glm::vec3 value = glm::vec3(0, 0, 0);
+	vec3 value;
 };
 
 class AnimationClip // animation data
@@ -38,7 +45,7 @@ public:
 	float playbackTime; // current time in animation
 
 	void playAnimation();
-	glm::vec3 posAnim();
-	glm::vec3 rotAnim();
-	glm::vec3 scaleAnim();
+	vec3 posAnim();
+	vec3 rotAnim();
+	vec3 scaleAnim();
 };

@@ -5,18 +5,18 @@ void Animator::playAnimation()
 
 }
 
-glm::vec3 Animator::posAnim()
+vec3 Animator::posAnim()
 {
-
+	// return next position
 }
 
-glm::vec3 Animator::rotAnim()
+vec3 Animator::rotAnim()
 {
-
+	// return next rotation
 }
 
-glm::vec3 Animator::scaleAnim()
+vec3 Animator::scaleAnim()
 {
-
+	// return next scale
 }
 
