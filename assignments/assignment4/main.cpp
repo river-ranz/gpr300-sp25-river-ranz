@@ -52,7 +52,7 @@ riv::Animator animator;
 
 GLuint depthMap;
 
-riv::Vec3Key zeroKey;
+riv::Vec3Key zeroKey, oneKey;
 
 int main() {
 	GLFWwindow* window = initWindow("Assignment 4", screenWidth, screenHeight);
@@ -64,6 +64,10 @@ int main() {
 	camera.aspectRatio = (float)screenWidth / screenHeight;
 	// vertical field of view in degrees
 	camera.fov = 60.0f;
+
+	oneKey.value.x = 1;
+	oneKey.value.y = 1;
+	oneKey.value.z = 1;
 
 	// depth testing
 	glEnable(GL_DEPTH_TEST);
@@ -142,41 +146,44 @@ int main() {
 		{
 			if (animator.playbackTime >= animator.clip->duration)
 			{
-				animator.playbackTime = 0.0f;
-				if (!animator.isLoop) { animator.isPlaying == false; }
+				if (animator.isLoop) { animator.playbackTime = 0.0f; }
 			}
 			else { animator.playbackTime += deltaTime; }
-
-			riv::vec3 *pos = nullptr, *rot = nullptr, *scale = nullptr;
-			if (animator.clip->positionKeys.size() > 0)
-			{
-				pos = new riv::vec3;
-				*pos = animator.posAnim();
-			}
-			if (animator.clip->rotationKeys.size() > 0)
-			{
-				rot = new riv::vec3;
-				*rot = animator.rotAnim();
-			}
-			if (animator.clip->scaleKeys.size() > 0)
-			{
-				scale = new riv::vec3;
-				*scale = animator.scaleAnim();
-			}
-
-			if (pos != nullptr)
-			{
-				monkeyTransform.position = glm::vec3(pos->x, pos->y, pos->z);
-			}
-			if (rot != nullptr)
-			{
-				monkeyTransform.rotation = glm::vec3(rot->x, rot->y, rot->z);
-			}
-			if (scale != nullptr)
-			{
-				monkeyTransform.scale = glm::vec3(scale->x, scale->y, scale->z);
-			}
 		}
+
+		riv::vec3* pos = nullptr, * rot = nullptr, * scale = nullptr;
+		if (animator.clip->positionKeys.size() > 0)
+		{
+			pos = new riv::vec3;
+			*pos = animator.posAnim(riv::vec3(monkeyTransform.position.x, monkeyTransform.position.y, monkeyTransform.position.z));
+		}
+		else { monkeyTransform.position = glm::vec3(0, 0, 0); }
+		if (animator.clip->rotationKeys.size() > 0)
+		{
+			rot = new riv::vec3;
+			*rot = animator.rotAnim(riv::vec3(monkeyTransform.rotation.x, monkeyTransform.rotation.y, monkeyTransform.rotation.z));
+		}
+		else { monkeyTransform.rotation = glm::vec3(0, 0, 0); }
+		if (animator.clip->scaleKeys.size() > 0)
+		{
+			scale = new riv::vec3;
+			*scale = animator.scaleAnim(riv::vec3(monkeyTransform.scale.x, monkeyTransform.scale.y, monkeyTransform.scale.z));
+		}
+		else { monkeyTransform.scale = glm::vec3(1, 1, 1); }
+
+		if (pos != nullptr)
+		{
+			monkeyTransform.position = glm::vec3(riv::easeInSine(pos->x), riv::easeInSine(pos->y), riv::easeInSine(pos->z));
+		}
+		if (rot != nullptr)
+		{
+			monkeyTransform.rotation = glm::vec3(riv::easeInSine(rot->x), riv::easeInSine(rot->y), riv::easeInSine(rot->z));
+		}
+		if (scale != nullptr)
+		{
+			monkeyTransform.scale = glm::vec3(riv::easeInSine(scale->x), riv::easeInSine(scale->y), riv::easeInSine(scale->z));
+		}
+
 
 		// first pass
 		// render to depth map
@@ -293,31 +300,31 @@ void drawUI() {
 			ImGui::SliderFloat3("Value", (float*)&animator.clip->positionKeys[i].value, -10.0f, 10.0f);
 			ImGui::PopID();
 		}
-		if (ImGui::Button("Add Keyframe")) { addKeyframe(animator.clip->positionKeys); }
+		if (ImGui::Button("Add Keyframe")) { animator.clip->positionKeys.push_back(zeroKey); }
 		if (ImGui::Button("Remove Keyframe")) { removeKeyframe(animator.clip->positionKeys); }
 	}
 	if (ImGui::CollapsingHeader("Rotation Keys"))
 	{
-		for (int i = 0; i < animator.clip->rotationKeys.size(); i++)
+		for (int i = 20; i < animator.clip->rotationKeys.size() + 20; i++)
 		{
 			ImGui::PushID(i);
-			ImGui::SliderFloat("Time", &animator.clip->rotationKeys[i].time, 0.0f, animator.clip->duration);
-			ImGui::SliderFloat3("Value", (float*)&animator.clip->rotationKeys[i].value, -10.0f, 10.0f);
+			ImGui::SliderFloat("Time", &animator.clip->rotationKeys[i - 20].time, 0.0f, animator.clip->duration);
+			ImGui::SliderFloat3("Value", (float*)&animator.clip->rotationKeys[i - 20].value, -50.0f, 50.0f);
 			ImGui::PopID();
 		}
-		if (ImGui::Button("Add Keyframe")) { addKeyframe(animator.clip->rotationKeys); }
+		if (ImGui::Button("Add Keyframe")) { animator.clip->rotationKeys.push_back(zeroKey); }
 		if (ImGui::Button("Remove Keyframe")) { removeKeyframe(animator.clip->rotationKeys); }
 	}
 	if (ImGui::CollapsingHeader("Scale Keys"))
 	{
-		for (int i = 0; i < animator.clip->scaleKeys.size(); i++)
+		for (int i = 40; i < animator.clip->scaleKeys.size() + 40; i++)
 		{
 			ImGui::PushID(i);
-			ImGui::SliderFloat("Time", &animator.clip->scaleKeys[i].time, 0.0f, animator.clip->duration);
-			ImGui::SliderFloat3("Value", (float*)&animator.clip->scaleKeys[i].value, -10.0f, 10.0f);
+			ImGui::SliderFloat("Time", &animator.clip->scaleKeys[i - 40].time, 0.0f, animator.clip->duration);
+			ImGui::SliderFloat("Value", &animator.clip->scaleKeys[i - 40].value.x, 0.0f, 10.0f);
 			ImGui::PopID();
 		}
-		if (ImGui::Button("Add Keyframe")) { addKeyframe(animator.clip->scaleKeys); }
+		if (ImGui::Button("Add Keyframe")) { animator.clip->scaleKeys.push_back(oneKey); }
 		if (ImGui::Button("Remove Keyframe")) { removeKeyframe(animator.clip->scaleKeys); }
 	}
 	ImGui::End();
@@ -326,12 +333,12 @@ void drawUI() {
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void addKeyframe(std::vector<riv::Vec3Key> &vec)
+void addKeyframe(std::vector<riv::Vec3Key>& vec)
 {
 	vec.push_back(zeroKey);
 }
 
-void removeKeyframe(std::vector<riv::Vec3Key> &vec)
+void removeKeyframe(std::vector<riv::Vec3Key>& vec)
 {
 	if (!vec.empty()) { vec.pop_back(); }
 }

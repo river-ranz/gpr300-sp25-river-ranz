@@ -9,23 +9,18 @@ namespace riv
 		if (t == 1.0f) { return b; }
 
 		vec3 lerped;
-		lerped.x = (a.x + (b.x - a.x) * t);
-		lerped.y = (a.y + (b.y - a.y) * t);
-		lerped.z = (a.z + (b.z - a.z) * t);
+		lerped.x = (a.x * (1.0f - t)) + (b.x * t);
+		lerped.y = (a.y * (1.0f - t)) + (b.y * t);
+		lerped.z = (a.z * (1.0f - t)) + (b.z * t);
 
 		return lerped;
 	}
 
-	vec3 invLerp(vec3 a, vec3 b, float x)
+	float invLerp(float a, float b, float x)
 	{
 		x = clamp(x, 0.0f, 1.0f);
 
-		vec3 lerped;
-		lerped.x = (x - a.x) / (b.x - a.x);
-		lerped.y = (x - a.y) / (b.y - a.y);
-		lerped.z = (x - a.z) / (b.z - a.z);
-
-		return lerped;
+		return (x - a) / (b - a);
 	}
 
 	float clamp(float val, float min, float max)
@@ -55,5 +50,10 @@ namespace riv
 		crossed.z = (a.x * b.y) - (a.y * b.x);
 
 		return crossed;
+	}
+
+	float easeInSine(float x)
+	{
+		return 1 - std::cos((x * 3.14159265) / 2);
 	}
 }

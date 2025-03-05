@@ -14,6 +14,16 @@ namespace riv
 	{
 	public:
 		float x = 0.0f, y = 0.0f, z = 0.0f;
+
+		vec3() { }
+
+		vec3(float x, float y, float z)
+		{
+			this->x = x;
+			this->y = y;
+			this->z = z;
+		}
+
 		float magnitude(vec3 vec)
 		{
 			float sum = (vec.x * vec.x) + (vec.y * vec.y) + (vec.z * vec.z);
@@ -28,11 +38,13 @@ namespace riv
 	};
 
 	vec3 lerp(vec3 a, vec3 b, float t);
-	vec3 invLerp(vec3 a, vec3 b, float x);
+	float invLerp(float a, float b, float x);
 
 	float clamp(float val, float min, float max);
 
 	float dot(vec3 a, vec3 b);
 	float dot(vec3 a, float b);
 	vec3 cross(vec3 a, vec3 b);
+
+	float easeInSine(float x);
 }

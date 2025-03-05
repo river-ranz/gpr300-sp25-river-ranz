@@ -32,9 +32,9 @@ namespace riv
 		float playbackSpeed; // negative is backwards
 		float playbackTime; // current time in animation
 
-		vec3 posAnim();
-		vec3 rotAnim();
-		vec3 scaleAnim();
+		vec3 posAnim(vec3 currentPos);
+		vec3 rotAnim(vec3 currentRot);
+		vec3 scaleAnim(vec3 currentScale);
 	};
 
 }
