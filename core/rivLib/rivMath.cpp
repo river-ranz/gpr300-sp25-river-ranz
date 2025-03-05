@@ -18,8 +18,6 @@ namespace riv
 
 	float invLerp(float a, float b, float x)
 	{
-		x = clamp(x, 0.0f, 1.0f);
-
 		return (x - a) / (b - a);
 	}
 
@@ -32,14 +30,12 @@ namespace riv
 
 	float dot(vec3 a, vec3 b)
 	{
-		float dotted = (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
-		return dotted;
+		return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 	}
 
 	float dot(vec3 a, float b)
 	{
-		float dotted = (a.x * b) + (a.y * b) + (a.z * b);
-		return dotted;
+		return (a.x * b) + (a.y * b) + (a.z * b);
 	}
 
 	vec3 cross(vec3 a, vec3 b)

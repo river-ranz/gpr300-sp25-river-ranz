@@ -184,7 +184,6 @@ int main() {
 			monkeyTransform.scale = glm::vec3(riv::easeInSine(scale->x), riv::easeInSine(scale->y), riv::easeInSine(scale->z));
 		}
 
-
 		// first pass
 		// render to depth map
 		depthShader.use();
