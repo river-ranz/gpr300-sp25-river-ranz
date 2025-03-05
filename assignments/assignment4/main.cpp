@@ -24,7 +24,6 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 GLFWwindow* initWindow(const char* title, int width, int height);
 void drawUI();
 void resetCamera(ew::Camera* camera, ew::CameraController* controller);
-void addKeyframe(std::vector<riv::Vec3Key>& vec);
 void removeKeyframe(std::vector<riv::Vec3Key>& vec);
 
 //Global state
@@ -330,11 +329,6 @@ void drawUI() {
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void addKeyframe(std::vector<riv::Vec3Key>& vec)
-{
-	vec.push_back(zeroKey);
 }
 
 void removeKeyframe(std::vector<riv::Vec3Key>& vec)
