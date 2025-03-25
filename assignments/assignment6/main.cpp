@@ -18,13 +18,12 @@
 #include <ew/texture.h>
 #include <ew/procGen.h>
 
-#include <rivLib/animation.h>
+#include "rivLib/forwardK.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 GLFWwindow* initWindow(const char* title, int width, int height);
 void drawUI();
 void resetCamera(ew::Camera* camera, ew::CameraController* controller);
-void removeKeyframe(std::vector<riv::Vec3Key>& vec);
 
 //Global state
 int screenWidth = 1080;
@@ -47,11 +46,10 @@ glm::vec3 lightPos(-0.25f, -1.0f, -0.5f);
 
 float bias;
 
-riv::Animator animator;
-
 GLuint depthMap;
 
-riv::Vec3Key zeroKey, oneKey;
+riv::Skeleton skeleton;
+riv::Joint torso, shoulder, elbow, wrist;
 
 int main() {
 	GLFWwindow* window = initWindow("Assignment 6", screenWidth, screenHeight);
@@ -63,10 +61,6 @@ int main() {
 	camera.aspectRatio = (float)screenWidth / screenHeight;
 	// vertical field of view in degrees
 	camera.fov = 60.0f;
-
-	oneKey.value.x = 1;
-	oneKey.value.y = 1;
-	oneKey.value.z = 1;
 
 	// depth testing
 	glEnable(GL_DEPTH_TEST);
@@ -113,13 +107,6 @@ int main() {
 	float nearPlane = 5.0f, farPlane = -2.0f;
 	glm::mat4 lightProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, nearPlane, farPlane);
 
-	animator.isPlaying = false;
-	animator.isLoop = false;
-	animator.playbackSpeed = 1.0f;
-	animator.playbackTime = 0.0f;
-
-	animator.clip = new riv::AnimationClip;
-
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
@@ -141,48 +128,6 @@ int main() {
 		// light space transformation matrix
 		glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
-		if (animator.isPlaying)
-		{
-			if (animator.playbackTime >= animator.clip->duration)
-			{
-				if (animator.isLoop) { animator.playbackTime = 0.0f; }
-			}
-			else { animator.playbackTime += deltaTime; }
-		}
-
-		riv::vec3* pos = nullptr, * rot = nullptr, * scale = nullptr;
-		if (animator.clip->positionKeys.size() > 0)
-		{
-			pos = new riv::vec3;
-			*pos = animator.posAnim(riv::vec3(monkeyTransform.position.x, monkeyTransform.position.y, monkeyTransform.position.z));
-		}
-		else { monkeyTransform.position = glm::vec3(0, 0, 0); }
-		if (animator.clip->rotationKeys.size() > 0)
-		{
-			rot = new riv::vec3;
-			*rot = animator.rotAnim(riv::vec3(monkeyTransform.rotation.x, monkeyTransform.rotation.y, monkeyTransform.rotation.z));
-		}
-		else { monkeyTransform.rotation = glm::vec3(0, 0, 0); }
-		if (animator.clip->scaleKeys.size() > 0)
-		{
-			scale = new riv::vec3;
-			*scale = animator.scaleAnim(riv::vec3(monkeyTransform.scale.x, monkeyTransform.scale.y, monkeyTransform.scale.z));
-		}
-		else { monkeyTransform.scale = glm::vec3(1, 1, 1); }
-
-		if (pos != nullptr)
-		{
-			monkeyTransform.position = glm::vec3(riv::easeInSine(pos->x), riv::easeInSine(pos->y), riv::easeInSine(pos->z));
-		}
-		if (rot != nullptr)
-		{
-			monkeyTransform.rotation = glm::vec3(riv::easeInSine(rot->x), riv::easeInSine(rot->y), riv::easeInSine(rot->z));
-		}
-		if (scale != nullptr)
-		{
-			monkeyTransform.scale = glm::vec3(riv::easeInSine(scale->x), riv::easeInSine(scale->y), riv::easeInSine(scale->z));
-		}
-
 		// first pass
 		// render to depth map
 		depthShader.use();
@@ -196,8 +141,6 @@ int main() {
 
 		depthShader.setMat4("model", planeTransform.modelMatrix());
 		planeMesh.draw();
-
-
 
 		depthShader.setMat4("model", monkeyTransform.modelMatrix());
 
@@ -226,8 +169,6 @@ int main() {
 
 		shader.setMat4("_Model", planeTransform.modelMatrix());
 		planeMesh.draw();
-
-
 
 		shader.setMat4("_Model", monkeyTransform.modelMatrix());
 
@@ -283,57 +224,12 @@ void drawUI() {
 	ImGui::EndChild();
 	ImGui::End();
 
-	ImGui::Begin("Animation");
-	ImGui::Checkbox("Playing", &animator.isPlaying);
-	ImGui::Checkbox("Loop", &animator.isLoop);
-	ImGui::SliderFloat("Playback Speed", &animator.playbackSpeed, -1.0f, 1.0f);
-	ImGui::SliderFloat("Playback Time", &animator.playbackTime, 0.0f, animator.clip->duration);
-	ImGui::SliderFloat("Duration", &animator.clip->duration, 0.0f, 100.0f);
-	if (ImGui::CollapsingHeader("Position Keys"))
-	{
-		for (int i = 0; i < animator.clip->positionKeys.size(); i++)
-		{
-			ImGui::PushID(i);
-			ImGui::SliderFloat("Time", &animator.clip->positionKeys[i].time, 0.0f, animator.clip->duration);
-			ImGui::SliderFloat3("Value", (float*)&animator.clip->positionKeys[i].value, -10.0f, 10.0f);
-			ImGui::PopID();
-		}
-		if (ImGui::Button("Add Keyframe")) { animator.clip->positionKeys.push_back(zeroKey); }
-		if (ImGui::Button("Remove Keyframe")) { removeKeyframe(animator.clip->positionKeys); }
-	}
-	if (ImGui::CollapsingHeader("Rotation Keys"))
-	{
-		for (int i = 20; i < animator.clip->rotationKeys.size() + 20; i++)
-		{
-			ImGui::PushID(i);
-			ImGui::SliderFloat("Time", &animator.clip->rotationKeys[i - 20].time, 0.0f, animator.clip->duration);
-			ImGui::SliderFloat3("Value", (float*)&animator.clip->rotationKeys[i - 20].value, -50.0f, 50.0f);
-			ImGui::PopID();
-		}
-		if (ImGui::Button("Add Keyframe")) { animator.clip->rotationKeys.push_back(zeroKey); }
-		if (ImGui::Button("Remove Keyframe")) { removeKeyframe(animator.clip->rotationKeys); }
-	}
-	if (ImGui::CollapsingHeader("Scale Keys"))
-	{
-		for (int i = 40; i < animator.clip->scaleKeys.size() + 40; i++)
-		{
-			ImGui::PushID(i);
-			ImGui::SliderFloat("Time", &animator.clip->scaleKeys[i - 40].time, 0.0f, animator.clip->duration);
-			ImGui::SliderFloat("Value", &animator.clip->scaleKeys[i - 40].value.x, 0.0f, 10.0f);
-			ImGui::PopID();
-		}
-		if (ImGui::Button("Add Keyframe")) { animator.clip->scaleKeys.push_back(oneKey); }
-		if (ImGui::Button("Remove Keyframe")) { removeKeyframe(animator.clip->scaleKeys); }
-	}
+	ImGui::Begin("Hierarchy");
+
 	ImGui::End();
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void removeKeyframe(std::vector<riv::Vec3Key>& vec)
-{
-	if (!vec.empty()) { vec.pop_back(); }
 }
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
