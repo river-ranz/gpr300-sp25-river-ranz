@@ -49,7 +49,7 @@ float bias;
 GLuint depthMap;
 
 riv::Skeleton skeleton;
-riv::Joint torso, shoulder, elbow, wrist;
+riv::Joint torso, shoulder_R, elbow_R, wrist_R, shoulder_L, elbow_L, wrist_L;
 
 int main() {
 	GLFWwindow* window = initWindow("Assignment 6", screenWidth, screenHeight);
@@ -107,6 +107,31 @@ int main() {
 	float nearPlane = 5.0f, farPlane = -2.0f;
 	glm::mat4 lightProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, nearPlane, farPlane);
 
+	skeleton.nodeCount = 7;
+
+	// MISERABLE!!!!!!
+	//skeleton.joints[0] = torso;
+	//skeleton.joints[1] = shoulder_L;
+	//skeleton.joints[2] = shoulder_R;
+	//skeleton.joints[3] = elbow_L;
+	//skeleton.joints[4] = elbow_R;
+	//skeleton.joints[5] = wrist_L;
+	//skeleton.joints[6] = wrist_R;
+
+	//*torso.children[0] = shoulder_L;
+	//*torso.children[1] = shoulder_R;
+	//torso.numChildren = 2;
+	//*shoulder_L.children[0] = elbow_L;
+	//shoulder_L.numChildren = 1;
+	//*shoulder_R.children[0] = elbow_R;
+	//shoulder_R.numChildren = 1;
+	//*elbow_L.children[0] = wrist_L;
+	//elbow_L.numChildren = 1;
+	//*elbow_R.children[0] = wrist_R;
+	//elbow_R.numChildren = 1;
+
+	torso.globalTransform = glm::mat4();
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
@@ -142,9 +167,11 @@ int main() {
 		depthShader.setMat4("model", planeTransform.modelMatrix());
 		planeMesh.draw();
 
-		depthShader.setMat4("model", monkeyTransform.modelMatrix());
-
-		monkeyModel.draw();
+		for (int i = 0; i < skeleton.nodeCount; i++)
+		{
+			depthShader.setMat4("model", skeleton.joints[i].globalTransform);
+			monkeyModel.draw();
+		}
 
 		// render with shadow mapping
 		glViewport(0, 0, screenWidth, screenHeight); // reset viewport
@@ -170,9 +197,11 @@ int main() {
 		shader.setMat4("_Model", planeTransform.modelMatrix());
 		planeMesh.draw();
 
-		shader.setMat4("_Model", monkeyTransform.modelMatrix());
-
-		monkeyModel.draw();
+		for (int i = 0; i < skeleton.nodeCount; i++)
+		{
+			depthShader.setMat4("model", skeleton.joints[i].globalTransform);
+			monkeyModel.draw();
+		}
 
 		drawUI();
 
