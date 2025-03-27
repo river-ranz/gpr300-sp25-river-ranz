@@ -110,6 +110,7 @@ int main() {
 	// left side
 	wrist_L.parent = new riv::Joint;
 	*wrist_L.parent = elbow_L;
+	wrist_L.parentIndex = 3;
 
 	elbow_L.parent = new riv::Joint;
 	*elbow_L.parent = shoulder_L;
@@ -117,6 +118,7 @@ int main() {
 	elbow_L.children[0] = new riv::Joint;
 	*elbow_L.children[0] = wrist_L;
 	elbow_L.numChildren = 1;
+	elbow_L.parentIndex = 1;
 
 	shoulder_L.parent = new riv::Joint;
 	*shoulder_L.parent = torso;
@@ -124,10 +126,12 @@ int main() {
 	shoulder_L.children[0] = new riv::Joint;
 	*shoulder_L.children[0] = elbow_L;
 	shoulder_L.numChildren = 1;
+	shoulder_L.parentIndex = 0;
 
 	// right side
 	wrist_R.parent = new riv::Joint;
 	*wrist_R.parent = elbow_R;
+	wrist_R.parentIndex = 4;
 
 	elbow_R.parent = new riv::Joint;
 	*elbow_R.parent = shoulder_R;
@@ -135,6 +139,7 @@ int main() {
 	elbow_R.children[0] = new riv::Joint;
 	*elbow_R.children[0] = wrist_R;
 	elbow_R.numChildren = 1;
+	elbow_R.parentIndex = 2;
 
 	shoulder_R.parent = new riv::Joint;
 	*shoulder_R.parent = torso;
@@ -142,6 +147,7 @@ int main() {
 	shoulder_R.children[0] = new riv::Joint;
 	*shoulder_R.children[0] = elbow_R;
 	shoulder_R.numChildren = 1;
+	shoulder_R.parentIndex = 0;
 
 	// torso
 	torso.children = new riv::Joint*[2];
@@ -302,7 +308,35 @@ void drawUI() {
 	ImGui::End();
 
 	ImGui::Begin("Hierarchy");
+	for (int i = 0; i < skeleton.nodeCount; i++)
+	{
+		if (skeleton.joints[i]->parentIndex = -1)
+		{
+			if (ImGui::CollapsingHeader("Torso"))
+			{
+				for (int j = 0; j < skeleton.joints[i]->numChildren; j++)
+				{
+					if (ImGui::CollapsingHeader("Shoulder" + i))
+					{
+						for (int k = 0; k < skeleton.joints[j]->numChildren; k++)
+						{
+							if (ImGui::CollapsingHeader("Elbow" + j))
+							{
+								for (int l = 0; l < skeleton.joints[k]->numChildren; l++)
+								{
+									if (ImGui::CollapsingHeader("Wrist" + k))
+									{
 
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			break;
+		}
+	}
 	ImGui::End();
 
 	ImGui::Render();
