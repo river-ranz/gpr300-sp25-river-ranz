@@ -6,15 +6,15 @@ namespace riv
 	struct Joint
 	{
 		glm::mat4 localTransform, globalTransform;
-		Joint* parent;
-		Joint** children;
-		unsigned int numChildren, parentIndex = -1;
+		Joint* parent = nullptr;
+		Joint** children = nullptr;
+		unsigned int numChildren = 0, parentIndex = -1;
 	};
 
 	struct Skeleton
 	{
-		Joint* joints;
-		unsigned int nodeCount;
+		Joint** joints = nullptr;
+		unsigned int nodeCount = 0;
 	};
 
 	void SolveFK(Joint* joint);

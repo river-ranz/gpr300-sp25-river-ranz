@@ -106,31 +106,77 @@ int main() {
 	// orthographic projection light source
 	float nearPlane = 5.0f, farPlane = -2.0f;
 	glm::mat4 lightProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, nearPlane, farPlane);
+	
+	// left side
+	wrist_L.parent = new riv::Joint;
+	*wrist_L.parent = elbow_L;
 
+	elbow_L.parent = new riv::Joint;
+	*elbow_L.parent = shoulder_L;
+	elbow_L.children = new riv::Joint*[1];
+	elbow_L.children[0] = new riv::Joint;
+	*elbow_L.children[0] = wrist_L;
+	elbow_L.numChildren = 1;
+
+	shoulder_L.parent = new riv::Joint;
+	*shoulder_L.parent = torso;
+	shoulder_L.children = new riv::Joint*[1];
+	shoulder_L.children[0] = new riv::Joint;
+	*shoulder_L.children[0] = elbow_L;
+	shoulder_L.numChildren = 1;
+
+	// right side
+	wrist_R.parent = new riv::Joint;
+	*wrist_R.parent = elbow_R;
+
+	elbow_R.parent = new riv::Joint;
+	*elbow_R.parent = shoulder_R;
+	elbow_R.children = new riv::Joint * [1];
+	elbow_R.children[0] = new riv::Joint;
+	*elbow_R.children[0] = wrist_R;
+	elbow_R.numChildren = 1;
+
+	shoulder_R.parent = new riv::Joint;
+	*shoulder_R.parent = torso;
+	shoulder_R.children = new riv::Joint * [1];
+	shoulder_R.children[0] = new riv::Joint;
+	*shoulder_R.children[0] = elbow_R;
+	shoulder_R.numChildren = 1;
+
+	// torso
+	torso.children = new riv::Joint*[2];
+	torso.children[0] = new riv::Joint;
+	*torso.children[0] = shoulder_L;
+	torso.children[1] = new riv::Joint;
+	*torso.children[1] = shoulder_R;
+	torso.numChildren = 2;
+
+	// skeleton
+	skeleton.joints = new riv::Joint*[7];
 	skeleton.nodeCount = 7;
+	skeleton.joints[0] = new riv::Joint;
+	*skeleton.joints[0] = torso;
+	skeleton.joints[1] = new riv::Joint;
+	*skeleton.joints[1] = shoulder_L;
+	skeleton.joints[2] = new riv::Joint;
+	*skeleton.joints[2] = shoulder_R;
+	skeleton.joints[3] = new riv::Joint;
+	*skeleton.joints[3] = elbow_L;
+	skeleton.joints[4] = new riv::Joint;
+	*skeleton.joints[4] = elbow_R;
+	skeleton.joints[5] = new riv::Joint;
+	*skeleton.joints[5] = wrist_L;
+	skeleton.joints[6] = new riv::Joint;
+	*skeleton.joints[6] = wrist_R;
 
-	// MISERABLE!!!!!!
-	//skeleton.joints[0] = torso;
-	//skeleton.joints[1] = shoulder_L;
-	//skeleton.joints[2] = shoulder_R;
-	//skeleton.joints[3] = elbow_L;
-	//skeleton.joints[4] = elbow_R;
-	//skeleton.joints[5] = wrist_L;
-	//skeleton.joints[6] = wrist_R;
-
-	//*torso.children[0] = shoulder_L;
-	//*torso.children[1] = shoulder_R;
-	//torso.numChildren = 2;
-	//*shoulder_L.children[0] = elbow_L;
-	//shoulder_L.numChildren = 1;
-	//*shoulder_R.children[0] = elbow_R;
-	//shoulder_R.numChildren = 1;
-	//*elbow_L.children[0] = wrist_L;
-	//elbow_L.numChildren = 1;
-	//*elbow_R.children[0] = wrist_R;
-	//elbow_R.numChildren = 1;
-
-	torso.globalTransform = glm::mat4();
+	// set transforms
+	torso.globalTransform = monkeyTransform.modelMatrix();
+	shoulder_L.globalTransform = glm::translate(torso.globalTransform, glm::vec3(-3, 0, 0));
+	shoulder_R.globalTransform = glm::translate(torso.globalTransform, glm::vec3(3, 0, 0));
+	elbow_L.globalTransform = glm::translate(shoulder_L.globalTransform, glm::vec3(-3, 0, 0));
+	elbow_R.globalTransform = glm::translate(shoulder_R.globalTransform, glm::vec3(3, 0, 0));
+	wrist_L.globalTransform = glm::translate(elbow_L.globalTransform, glm::vec3(-3, 0, 0));
+	wrist_R.globalTransform = glm::translate(elbow_R.globalTransform, glm::vec3(3, 0, 0));
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -167,9 +213,10 @@ int main() {
 		depthShader.setMat4("model", planeTransform.modelMatrix());
 		planeMesh.draw();
 
+		//riv::SolveFK(skeleton);
 		for (int i = 0; i < skeleton.nodeCount; i++)
 		{
-			depthShader.setMat4("model", skeleton.joints[i].globalTransform);
+			depthShader.setMat4("model", skeleton.joints[i]->globalTransform);
 			monkeyModel.draw();
 		}
 
@@ -197,9 +244,10 @@ int main() {
 		shader.setMat4("_Model", planeTransform.modelMatrix());
 		planeMesh.draw();
 
+		//riv::SolveFK(skeleton);
 		for (int i = 0; i < skeleton.nodeCount; i++)
 		{
-			depthShader.setMat4("model", skeleton.joints[i].globalTransform);
+			depthShader.setMat4("model", skeleton.joints[i]->globalTransform);
 			monkeyModel.draw();
 		}
 

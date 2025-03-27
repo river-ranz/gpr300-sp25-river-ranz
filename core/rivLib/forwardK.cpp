@@ -20,12 +20,12 @@ namespace riv
 
 	void riv::SolveFK(Skeleton hierarchy)
 	{
-		for (int i = 0; i <= hierarchy.nodeCount; i++)
+		for (int i = 0; i < hierarchy.nodeCount; i++)
 		{
-			if (hierarchy.joints->parentIndex == -1) { hierarchy.joints->globalTransform = hierarchy.joints->localTransform; }
+			if (hierarchy.joints[i]->parentIndex == -1) { hierarchy.joints[i]->globalTransform = hierarchy.joints[i]->localTransform; }
 			else
 			{
-				hierarchy.joints->globalTransform = hierarchy.joints[hierarchy.joints->parentIndex].globalTransform * hierarchy.joints->localTransform;
+				hierarchy.joints[i]->globalTransform = hierarchy.joints[hierarchy.joints[i]->parentIndex]->globalTransform * hierarchy.joints[i]->localTransform;
 			}
 		}
 	}
